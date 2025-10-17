@@ -1,27 +1,37 @@
-"use strict";
+interface Goal {
+    id: number;
+    text: string;
+}
+
 class TodoApp {
+    private goals: Goal[] = [];
+    private editMode: boolean = false;
+    private currentEditId: number | null = null;
+
     constructor() {
-        this.goals = [];
-        this.editMode = false;
-        this.currentEditId = null;
         this.initializeEventListeners();
         this.renderGoals();
     }
-    initializeEventListeners() {
+
+    private initializeEventListeners(): void {
         const addButton = document.getElementById('addButton');
-        const newGoalInput = document.getElementById('newGoal');
-        addButton === null || addButton === void 0 ? void 0 : addButton.addEventListener('click', () => this.addGoal());
-        newGoalInput === null || newGoalInput === void 0 ? void 0 : newGoalInput.addEventListener('keypress', (e) => {
+        const newGoalInput = document.getElementById('newGoal') as HTMLInputElement;
+
+        addButton?.addEventListener('click', () => this.addGoal());
+        
+        newGoalInput?.addEventListener('keypress', (e: KeyboardEvent) => {
             if (e.key === 'Enter') {
                 this.addGoal();
             }
         });
     }
-    addGoal() {
-        const input = document.getElementById('newGoal');
+
+    private addGoal(): void {
+        const input = document.getElementById('newGoal') as HTMLInputElement;
         const text = input.value.trim();
+
         if (text) {
-            const goal = {
+            const goal: Goal = {
                 id: Date.now(),
                 text: text
             };
@@ -30,11 +40,13 @@ class TodoApp {
             this.renderGoals();
         }
     }
-    deleteGoal(id) {
+
+    private deleteGoal(id: number): void {
         this.goals = this.goals.filter(goal => goal.id !== id);
         this.renderGoals();
     }
-    editGoal(id) {
+
+    private editGoal(id: number): void {
         const goal = this.goals.find(g => g.id === id);
         if (goal) {
             this.editMode = true;
@@ -42,29 +54,37 @@ class TodoApp {
             this.renderGoals();
         }
     }
-    saveGoal(id) {
-        const input = document.querySelector('.edit-input');
+
+    private saveGoal(id: number): void {
+        const input = document.querySelector('.edit-input') as HTMLInputElement;
         const newText = input.value.trim();
+
         if (newText) {
-            this.goals = this.goals.map(goal => goal.id === id ? Object.assign(Object.assign({}, goal), { text: newText }) : goal);
+            this.goals = this.goals.map(goal =>
+                goal.id === id ? {...goal, text: newText} : goal
+            );
             this.editMode = false;
             this.currentEditId = null;
             this.renderGoals();
         }
     }
-    cancelEdit() {
+
+    private cancelEdit(): void {
         this.editMode = false;
         this.currentEditId = null;
         this.renderGoals();
     }
-    renderGoals() {
+
+    private renderGoals(): void {
         const container = document.getElementById('goalsContainer');
-        if (!container)
-            return;
+        if (!container) return;
+
         container.innerHTML = '';
+
         this.goals.forEach(goal => {
             const goalElement = document.createElement('div');
             goalElement.className = 'goal-card';
+
             if (this.editMode && goal.id === this.currentEditId) {
                 goalElement.innerHTML = `
                     <input type="text" class="edit-input" value="${this.escapeHtml(goal.text)}">
@@ -73,8 +93,7 @@ class TodoApp {
                         <button class="delete-btn" data-action="cancel">Отмена</button>
                     </div>
                 `;
-            }
-            else {
+            } else {
                 goalElement.innerHTML = `
                     <div class="goal-text">${this.escapeHtml(goal.text)}</div>
                     <div class="goal-actions">
@@ -83,19 +102,25 @@ class TodoApp {
                     </div>
                 `;
             }
+
             container.appendChild(goalElement);
         });
+
         this.attachEventListenersToGoals();
     }
-    attachEventListenersToGoals() {
+
+    private attachEventListenersToGoals(): void {
         const buttons = document.querySelectorAll('.goal-actions button');
+        
         buttons.forEach(button => {
             button.addEventListener('click', (e) => {
-                const target = e.target;
+                const target = e.target as HTMLButtonElement;
                 const action = target.getAttribute('data-action');
                 const id = target.getAttribute('data-id');
+
                 if (action && id) {
                     const numericId = parseInt(id, 10);
+                    
                     switch (action) {
                         case 'edit':
                             this.editGoal(numericId);
@@ -114,7 +139,8 @@ class TodoApp {
             });
         });
     }
-    escapeHtml(unsafe) {
+
+    private escapeHtml(unsafe: string): string {
         return unsafe
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
